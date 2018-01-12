@@ -7,6 +7,11 @@ $app = Codex::start( [
     ],
     'defaultController' => 'site',
     'defaultAction' => 'index',
+    'db' => [
+        'dsn' => 'mysql:dbname=sample_db;host=localhost',
+        'username' => 'root',
+        'passwd' => ''
+    ]
 ] );
 ?>
 <?=$app->handle( $_SERVER['REQUEST_URI'] );?>

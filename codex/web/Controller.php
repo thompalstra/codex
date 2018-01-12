@@ -4,6 +4,7 @@ namespace codex\web;
 class Controller extends \codex\base\Model{
 
     public $layout = 'index';
+    public $title = '';
 
     public function __construct( $args ){
         foreach($args as $k => $v){

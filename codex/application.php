@@ -12,7 +12,8 @@ class Application{
     function handle( $request ){
         $route = $this->parse( $request );
 
-        $controller = \codex\web\Controller::fromRoute( $route );
+        $controller = $this->controller = \codex\web\Controller::fromRoute( $route );
+        $this->controller->title = ucwords( $this->controller->actionId );
         return $controller->runAction( $controller->actionId, $route[1] );
     }
     function parse( $request ){
