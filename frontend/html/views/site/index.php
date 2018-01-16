@@ -1,1 +1,1 @@
-<h1>{{\Codex.app.controller.title}}</h1>
+<h2>site/index</h2>

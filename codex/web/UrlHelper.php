@@ -16,11 +16,9 @@ class UrlHelper extends \codex\base\Model{
             ];
         }
 
-        $actionId = $parts[ count($parts) - 1 ];
-        array_pop($parts);
-        $controllerId = $parts[ count($parts) - 1 ];
+        $route = implode("/", $parts);
 
-        return [ "$controllerId/$actionId", $parameters ];
+        return [ "$route", $parameters ];
     }
 }
 ?>

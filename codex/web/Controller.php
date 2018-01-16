@@ -33,9 +33,16 @@ class Controller extends \codex\base\Model{
         $actionId = $parts[count($parts)-1];
         array_pop($parts);
         $controllerId = $parts[count($parts)-1];
+
+        $viewPath = ( count($parts) > 0 ) ? implode("\\", $parts) . DIRECTORY_SEPARATOR : "";
+        array_pop($parts);
+        $path = ( count($parts) > 0 ) ? implode("\\", $parts) . DIRECTORY_SEPARATOR : "";
+
+
+
         $controllerName = ucwords( $controllerId ) . 'Controller';
         $controllerNamespace = \Codex::$app->environment->name . DIRECTORY_SEPARATOR . 'controllers' . DIRECTORY_SEPARATOR;
-        $controllerClassName = $controllerNamespace . $controllerName;
+        $controllerClassName = $controllerNamespace . $path . $controllerName;
 
         if( !class_exists( $controllerClassName ) ){
             $controllerClassName = $controllerNamespace . ucwords( \Codex::$app->defaultController ) . 'Controller';
@@ -43,6 +50,8 @@ class Controller extends \codex\base\Model{
 
         return new $controllerClassName([
             'id' => $controllerId,
+            'viewPath' => $viewPath,
+            'path' => $path,
             'name' => $controllerName,
             'namespace' => $controllerNamespace,
             'className' => $controllerClassName,
@@ -84,9 +93,8 @@ class Controller extends \codex\base\Model{
         }
     }
 
-    public function render( $viewId, $data ){
-        $view = $this->id . DIRECTORY_SEPARATOR . $viewId;
-        return View::render( $view, $this->layout, $data );
+    public function render( $viewId, $data = [] ){
+        return View::render( $viewId, $this->layout, $data );
     }
 }
 
