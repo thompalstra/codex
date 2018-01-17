@@ -1,28 +1,10 @@
 <?php
 namespace frontend\controllers;
 
-use common\models\User;
+use codex\security\User;
 
 class SiteController extends \codex\web\Controller{
     public function actionIndex(){
-
-        // $query = new \codex\db\Query();
-        // $query->select('user.*')
-        // ->from('user')
-        // ->fetchClass( User::className() )
-        // ->where([
-        //     '=' => [
-        //         'id' => 1,
-        //         'is_deleted' => 0
-        //     ]
-        // ])
-        // ->orWhere([
-        //     '=' => [
-        //         'id' => 2,
-        //         'is_deleted' => 1
-        //     ]
-        // ]);
-
         $query = User::find()
         ->where([
             '=' => [
@@ -44,12 +26,10 @@ class SiteController extends \codex\web\Controller{
             'title' => 'test',
         ]);
     }
-    public function actionTest( $derp ){
-    }
+
     public function actionError($exception){
         return $this->render('error', [
-            'exception' => $exception,
-            'title' => 'error',
+            'exception' => $exception
         ]);
     }
 }

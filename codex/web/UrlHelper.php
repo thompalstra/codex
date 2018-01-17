@@ -8,11 +8,11 @@ class UrlHelper extends \codex\base\Model{
 
         if( count($parts) == 1 ) {
             if( $parts[0] == ''){
-                $parts[0] = \Codex::$app->defaultAction;
+                $parts[0] = \Codex::$app->web->defaultAction;
             }
 
             $parts = [
-                \Codex::$app->defaultController, $parts[0],
+                \Codex::$app->web->defaultController, $parts[0],
             ];
         }
 

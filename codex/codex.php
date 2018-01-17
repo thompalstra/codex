@@ -11,6 +11,7 @@ class Codex{
         include(__DIR__ . DIRECTORY_SEPARATOR . 'application.php');
         include(__DIR__ . DIRECTORY_SEPARATOR . 'autoload.php');
         Codex::$app = $app = new Application( $config );
+        Codex::$app->web = (object)Codex::$app->web;
         $app->baseDir = dirname( __DIR__ );
 
         $app->pdo = new PDO(

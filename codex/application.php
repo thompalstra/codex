@@ -33,7 +33,7 @@ class Application{
                     $route = $parsedRoute;
                 }
             } else {
-                $urlClass = $this->urlClass;
+                $urlClass = $this->web->urlClass;
                 if( $parsedRoute = $urlClass::parse( $request, $_GET ) ){
                     $route = $parsedRoute;
                 }

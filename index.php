@@ -1,12 +1,14 @@
 <?php include('/codex/codex.php') ?>
 <?php
 $app = Codex::start( [
-    'urlClass' => 'codex\web\UrlHelper',
+    'web' => [
+        'urlClass' => 'codex\web\UrlHelper',
+        'defaultController' => 'site',
+        'defaultAction' => 'index',
+    ],
     'environments' => [
         'default' => 'frontend'
     ],
-    'defaultController' => 'site',
-    'defaultAction' => 'index',
     'db' => [
         'dsn' => 'mysql:dbname=sample_db;host=localhost',
         'username' => 'root',

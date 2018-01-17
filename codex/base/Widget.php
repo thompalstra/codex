@@ -6,8 +6,8 @@ class Widget{
         $c = get_called_class();
         $w = new $c();
 
-        call_user_func_array( [$w, 'in'], func_get_args() );
-        return $w->out();
+        call_user_func_array( [$w, 'prepare'], func_get_args() );
+        return $w->output();
     }
 }
 ?>

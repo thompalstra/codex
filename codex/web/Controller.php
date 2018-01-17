@@ -1,6 +1,8 @@
 <?php
 namespace codex\web;
 
+use codex\exceptions\HttpNotFoundException;
+
 class Controller extends \codex\base\Model{
 
     public $layout = 'index';
@@ -12,11 +14,26 @@ class Controller extends \codex\base\Model{
         }
     }
 
+    public function runError( $message, $statusCode = 404 ){
+
+        $exception = new HttpNotFoundException( $message, $statusCode );
+
+        if( !method_exists($this, 'actionError') ){
+            $defaultController = self::getDefaultController();
+            if( method_exists($defaultController, 'actionError') ){
+                return $defaultController->runAction('error', ['exception' => $exception]);
+            }
+        } else {
+            return $this->runAction('error', ['exception' => $exception]);
+        }
+    }
+
     public static function getDefaultController(){
-        $controllerClassName = \Codex::$app->environment->name . DIRECTORY_SEPARATOR . 'controllers' . DIRECTORY_SEPARATOR . ucwords( \Codex::$app->defaultController ) . 'Controller';
+        $controllerClassName = \Codex::$app->environment->name . DIRECTORY_SEPARATOR . 'controllers' . DIRECTORY_SEPARATOR . ucwords( \Codex::$app->web->defaultController ) . 'Controller';
         return new $controllerClassName([
-            'id' => \Codex::$app->defaultController,
-            'name' => ucwords( \Codex::$app->defaultController ) . 'Controller',
+            'id' => \Codex::$app->web->defaultController,
+            'viewPath' => \Codex::$app->web->defaultController,
+            'name' => ucwords( \Codex::$app->web->defaultController ) . 'Controller',
             'namespace' => \Codex::$app->environment->name . DIRECTORY_SEPARATOR . 'controllers' . DIRECTORY_SEPARATOR,
             'className' => $controllerClassName,
             'actionId' => null
@@ -38,14 +55,12 @@ class Controller extends \codex\base\Model{
         array_pop($parts);
         $path = ( count($parts) > 0 ) ? implode("\\", $parts) . DIRECTORY_SEPARATOR : "";
 
-
-
         $controllerName = ucwords( $controllerId ) . 'Controller';
         $controllerNamespace = \Codex::$app->environment->name . DIRECTORY_SEPARATOR . 'controllers' . DIRECTORY_SEPARATOR;
         $controllerClassName = $controllerNamespace . $path . $controllerName;
 
         if( !class_exists( $controllerClassName ) ){
-            $controllerClassName = $controllerNamespace . ucwords( \Codex::$app->defaultController ) . 'Controller';
+            $controllerClassName = $controllerNamespace . ucwords( \Codex::$app->web['defaultController'] ) . 'Controller';
         }
 
         return new $controllerClassName([
@@ -60,6 +75,7 @@ class Controller extends \codex\base\Model{
     }
 
     public function runAction( $actionId, $parameters ){
+        \Codex::$app->controller = $this;
         $action = 'action' . ucwords( $actionId );
 
         $actionParams = [];
@@ -71,26 +87,15 @@ class Controller extends \codex\base\Model{
                     $actionParams[ $param->name ] = $parameters[ $param->name ] ;
                 }
             }
-            if( count($actionParams) == $reflectionMethod->getNumberOfParameters() ){
+            if( count($actionParams) == $reflectionMethod->getNumberOfRequiredParameters() ){
                 return call_user_func_array( array($this, $action), $actionParams);
-            } else if( method_exists( $this, 'actionError' ) ) {
-                return call_user_func_array( array($this, 'actionError' ), ['exception' => new \Exception('Params do not match', 500) ] );
             } else {
-                $defaultController = self::getDefaultController();
-                if( method_exists( $defaultController, 'actionError' ) ){
-                    return call_user_func_array( array($defaultController, 'actionError'), ['exception' => new \Exception('Error executing error', 500)]);
-                } else {
-                    return 'error executing error';
+                if( method_exists( $this, 'actionError' ) ) {
+                    return $this->runError("Missing arguments");
                 }
             }
-        } else {
-            $defaultController = self::getDefaultController();
-            if( method_exists( $defaultController, 'actionError' ) ){
-                return call_user_func_array( array($defaultController, 'actionError'), ['exception' => new \Exception('no such action', 404)]);
-            } else {
-                return 'no such action';
-            }
         }
+        return self::getDefaultController()->runError("Page not found <small>(4020)</small>");
     }
 
     public function render( $viewId, $data = [] ){

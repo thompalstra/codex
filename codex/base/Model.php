@@ -2,6 +2,10 @@
 namespace codex\base;
 
 class Model extends \codex\db\Record{
+
+    public $_attributes = [];
+    public $_oldAttributes = [];
+
     public function __get( $key ){
         if( property_exists( $this, $key ) ){
             return $this->$key;
@@ -11,7 +15,8 @@ class Model extends \codex\db\Record{
         }
     }
 
-    public function __construct( $params = null ){
+    public function __construct( $params = [] ){
+
         foreach($params as $k => $v){
             $this->$k = $v;
         }
