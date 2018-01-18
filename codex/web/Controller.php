@@ -99,7 +99,8 @@ class Controller extends \codex\base\Model{
     }
 
     public function render( $viewId, $data = [] ){
-        return View::render( $viewId, $this->layout, $data );
+        $view = new View();
+        return $view->render( $viewId, $this->layout, $data );
     }
 }
 

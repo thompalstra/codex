@@ -5,22 +5,23 @@ use codex\security\User;
 
 class SiteController extends \codex\web\Controller{
     public function actionIndex(){
-        $query = User::find()
-        ->where([
-            '=' => [
-                'id' => 1,
-                'is_deleted' => 0
-            ]
-        ])
-        ->orWhere([
-            '=' => [
-                'id' => 2,
-                'is_deleted' => 1
-            ]
-        ]);
-        $users = $query->all();
 
-        $user = $users[0];
+        $q = new \codex\db\Query();
+        $q->select('user.id')->from('user');
+        $q->where([
+            'and',
+            ['user.id' => 1]
+        ]);
+
+        $user = User::find()->where([
+            'and',
+            ['is_deleted' => 1],
+            ['=', 'is_enabled', 1]
+        ])->orWhere([
+            'and',
+            ['in', 'id', $q]
+        ])->one();
+
         return $this->render('index', [
             'user' => $user,
             'title' => 'test',

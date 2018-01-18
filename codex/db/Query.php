@@ -19,30 +19,51 @@ class Query{
         $lines[] = "SELECT $this->select";
         $lines[] = "FROM $this->from";
 
-        foreach($this->data as $data){
+        foreach( $this->data as $data ){
+            $type = $data['type'];
+            $query = $data['query'];
 
-            $line = [];
-            $group = false;
-
-            if( isset( $data['type'] ) && !empty( $data['type'] ) ){
-                $line[] = $data['type'];
-                $group = true;
-                unset( $data['type'] );
-            }
-
-            $line[] = ( $group == true ) ? "(" : "";
-            $line[] = implode(' and ', $data['data']);
-            $line[] = ( $group == true ) ? ")" : "";
-
-            $lines[] = implode(' ', $line);
+            $lines[] = $this->createQuery( $type, $query );
         }
-
         return implode(' ', $lines);
     }
 
-    public function appendWhere( $key, $query ){
-
+    public function createQuery( $type, $query ){
+        return "$type (" . $this->createSubQuery( $query ) . ")";
     }
+
+    public function createSubQuery( $query ){
+        $glue = $query[0];
+        array_shift($query);
+
+        $lines = [];
+
+        foreach( $query as $params ){
+            if( count( $params ) == 1 ){
+                $firstKey = array_keys($params)[0];
+                $firstValue = $params[$firstKey];
+                $lines[] = "$firstKey = $firstValue";
+            } else if( count( $params ) == 3 ) {
+                $c = $params[1];
+                $v = $params[2];
+                $g = $params[0];
+
+                if( is_object( $v ) ){
+                    $className = get_class( $v );
+
+                    if( $className == 'codex\db\Query' ){
+                        $v = "(" . $v->createCommand() . ")";
+                    }
+                }
+
+
+
+                $lines[] = "$c $g $v";
+            }
+        }
+        return implode(" $glue ", $lines);
+    }
+
 
     public function select( $query ){
         $this->select = $query;
@@ -55,42 +76,24 @@ class Query{
         return $this;
     }
     public function where( $query ){
-        $where = [
+        $this->data[] = [
             'type' => 'WHERE',
-            'data' => []
+            'query' => $query
         ];
-        foreach( $query as $type => $params ){
-            foreach( $params as $column => $value ){
-                $where['data'][] = "$column $type $value";
-            }
-        }
-        $this->data[] = $where;
         return $this;
     }
     public function andWhere( $query ){
-        $where = [
+        $this->data[] = [
             'type' => 'AND',
-            'data' => []
+            'query' => $query
         ];
-        foreach( $query as $type => $params ){
-            foreach( $params as $column => $value ){
-                $where['data'][] = "$column $type $value";
-            }
-        }
-        $this->data[] = $where;
         return $this;
     }
     public function orWhere( $query ){
-        $where = [
+        $this->data[] = [
             'type' => 'OR',
-            'data' => []
+            'query' => $query
         ];
-        foreach( $query as $type => $params ){
-            foreach( $params as $column => $value ){
-                $where['data'][] = "$column $type $value";
-            }
-        }
-        $this->data[] = $where;
         return $this;
     }
 
@@ -134,25 +137,26 @@ class Query{
         return $this;
     }
     public function all(){
-        return $this->fetchAll( $this->createCommand() );
+        return $this->fetchAll( $this->createCommand(), $this->className );
     }
-    public function fetchAll( $command ){
-        $sth = \Codex::$app->pdo->prepare( $command );
-        $sth->execute();
 
-        $className = $this->className;
-        $subClassName = $className::subClassName();
+    public function asArray(){
+        $this->className = null;
+        return $this->fetchAll( $this->createCommand(), null );
+    }
 
-        if( empty($this->className) ){
-            return $sth->fetchAll();
-        } else {
-            $constructorParams = [
+    public function fetchAll( $command, $className = null ){
+        if( $className != null ){
+            $sth = \Codex::$app->pdo->prepare( $command );
+            $sth->execute();
+            return $sth->fetchAll(\PDO::FETCH_CLASS, $className, [ [
                 'isNewRecord' => 0
-            ];
-            return $sth->fetchAll(\PDO::FETCH_CLASS, $this->className, [ $constructorParams ] );
+            ] ] );
+        } else if( $className == null){
+            $sth = \Codex::$app->pdo->prepare( $command );
+            $sth->execute();
+            return $sth->fetchAll();
         }
-
-        return $this;
     }
 }
 ?>
