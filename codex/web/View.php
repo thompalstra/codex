@@ -17,6 +17,8 @@ class View extends \codex\base\Model{
 
         $baseDir = \Codex::$app->baseDir . DIRECTORY_SEPARATOR . \Codex::$app->environment->name;
 
+
+
         $baseView = $baseDir . DIRECTORY_SEPARATOR . 'html' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . \Codex::$app->controller->viewPath . DIRECTORY_SEPARATOR;
         $baseLayout = $baseDir . DIRECTORY_SEPARATOR . 'html' . DIRECTORY_SEPARATOR . 'layouts' . DIRECTORY_SEPARATOR;
 
@@ -99,18 +101,20 @@ class View extends \codex\base\Model{
     }
 
     public function renderFile( $file, $data = []){
-
         if( !is_dir( dirname( $file ) ) || !file_exists( $file ) ){
             if( $file[0] == '/' ){
-                $file = \Codex::$app->baseDir . DIRECTORY_SEPARATOR . "$file.php" ;
+                $file = \Codex::$app->baseDir . "$file.php" ;
             } else {
                 $file = \Codex::$app->baseDir . DIRECTORY_SEPARATOR . \Codex::$app->environment->name . DIRECTORY_SEPARATOR . 'html' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . \Codex::$app->controller->viewPath . $file . ".php";
+
             }
         }
 
         if( !is_dir( dirname($file) ) ){
+            print_r( "does not exist $file <br/>" );
             return \Codex::$app->controller->runError( "Page not found <small>(4000)</small>" );
         } else if( !file_exists( $file ) ){
+            print_r( "does not exist2 $file <br/>" );
             return \Codex::$app->controller->runError( "Page not found <small>(4010)</small>" );
         }
 

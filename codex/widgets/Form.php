@@ -6,9 +6,12 @@ use codex\widgets\FormField;
 class Form extends \codex\base\Widget{
 
     public $options = [
-        'class' => 'form form-default'
+        'class' => 'form form-default',
+        'co-validate' => 'change' // change, submit, never
     ];
-    public $inputOptions = [];
+    public $inputOptions = [
+        'class' => 'input input-default',
+    ];
     public $itemOptions = [
         'class' => 'form field-default',
     ];

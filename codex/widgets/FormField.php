@@ -40,6 +40,8 @@ class FormField extends \codex\base\Widget{
     }
 
     public function input( $options = [] ){
-        return Html::open( 'div', $this->form->itemOptions ) . Html::input( $options + $this->inputOptions + ( isset( $options['type'] ) ? [] : ['type'=>'text'] ) ) . Html::close( 'div' );
+        $inputOptions = $options + $this->inputOptions + $this->form->inputOptions + ( isset( $options['type'] ) ? [] : ['type'=>'text'] );
+        $itemOptions = $this->form->itemOptions;
+        return Html::open( 'div', $itemOptions ) . Html::input( $inputOptions ) . Html::close( 'div' );
     }
 }

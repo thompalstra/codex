@@ -1,3 +1,66 @@
 .nav.nav-default{
     background-color: #ddd;
 }
+
+.nav .nav.item-default{
+    color: white;
+}
+
+.nav .nav.item-default[co-is-toggled],
+.nav .nav.item-default:hover{
+    background-color: rgba(0,0,0,.2);
+}
+
+.nav .nav.item-default ul{
+    background-color: #ccc;
+}
+
+.nav.nav-default ul{
+    margin: 0;
+    padding: 0;
+}
+
+.nav li ul{
+    display: none;
+    position: absolute;
+    min-width: 100%;
+}
+
+.nav li ul li label{
+    white-space: nowrap;
+}
+
+.nav li[co-is-toggled] > label > ul{
+    display: initial;
+}
+
+.nav li ul li{
+    display: block;
+    min-width: 100%;
+}
+
+
+.nav li[co-dropdown-top] ul{  bottom: 100%;  }
+.nav li[co-dropdown-right] ul{  right: 0%;  }
+.nav li[co-dropdown-bottom] ul{  top: 100%;  }
+.nav li[co-dropdown-left] ul{  left: 0%;  }
+
+.nav .nav.item-default{
+    height: 50px;
+    padding: 0 10px;
+    line-height: 50px;
+    display: inline-block;
+    position: relative;
+    box-sizing: border-box;
+}
+
+.nav .nav.item-default[dropdown] > label:after{
+    content: "▾";
+    width: 20px;
+    height: 50px;
+    float: right;
+    text-align: center;
+}
+.nav .nav.item-default[dropdown][co-is-toggled] > label:after{
+    content: "▴";
+}

@@ -5,7 +5,7 @@ use codex\helpers\Html;
 
 class Nav extends \Codex\base\Widget{
     public $options = [
-        'class' => 'nav nav-default'
+        'class' => 'nav nav-default pos-fixed top left right'
     ];
     public $inputOptions = [];
     public $itemOptions = [
@@ -43,18 +43,18 @@ class Nav extends \Codex\base\Widget{
     public function item( $item ){
 
         if( isset( $item['options']) ){
-            $itemOptions = Html::mergeHtmlAttributes( $itemOptions, $item['options'] );
+            $itemOptions = Html::mergeHtmlAttributes( $this->itemOptions, $item['options'] );
         } else {
             $itemOptions = $this->itemOptions;
         }
 
-        $output = "";
-
         if( isset($item['items']) ){
             $itemOptions['dropdown'] = "";
-            $output = Html::li( Html::label( $item['label'] . $this->items( $item['items']), $itemOptions ) );
+            $output = Html::li( Html::label( $item['label'] . $this->items( $item['items']) ), $itemOptions );
         } else if ( isset($item['label']) ) {
             $output = Html::li( Html::label( $item['label'] ), $itemOptions );
+        } else {
+            $output = "";
         }
 
         if( isset($item['url'])){

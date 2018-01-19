@@ -129,26 +129,30 @@ extend( codex ).with({
     }
 });
 
-var Finder = function( context, query ){
+codex.finder = CodexFinder = function( context ){
     this.context = context;
-    this.query = query;
 }
-
-extend(Finder).with({
-    all: function(){
-        return this.context.querySelectorAll( this.query );
+extend(codex.finder).with({
+    one: function( query ){
+        return this.context.querySelector( query );
     },
-    one: function(){
-        return this.context.querySelector( this.query );
+    all: function( query ){
+        return this.context.querySelectorAll( query );
     },
-    id: function(){
-        return this.context.getElementById( this.query );
-    }
-})
+    byId: function(query ){
+        return this.context.getElementById( query );
+    },
+    byClass: function(query ){
+        return this.context.getElementById( query );
+    },
+    byTag: function( query ){
+        return this.context.getElementsByTagName( query );
+    },
+});
 
 extend(Element, Document).with({
-    find: function( query ){
-        return new Finder( this, query );
+    find: function(){
+        return new codex.finder( this );
     },
     addClass: function( a ){
         this.classList.add( a );
@@ -249,7 +253,8 @@ extend(Element, Document).with({
     }
 });
 
-extend(HTMLCollection).with({
+
+extend(HTMLCollection, HTMLFormControlsCollection).with({
     forEach: function( callable ){
         for(i=0;i<this.length;i++){
             callable.call( window, this[i] );
@@ -260,3 +265,11 @@ extend(HTMLCollection).with({
 document.listen('DOMContentLoaded', function(e){
     document.dispatch( 'loaded' );
 } );
+document.listen('click', '*', function( event ){
+    if( event.target.attr('co-is-toggled') ){
+        document.find().all('[co-is-toggled]').forEach( function( el ){
+            el.attr('co-is-toggled', null);
+        });
+    }
+
+});

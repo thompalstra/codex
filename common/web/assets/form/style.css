@@ -1,0 +1,21 @@
+.form.form-default{
+
+}
+.form.field-default{
+
+}
+.input.input-default{
+    width: 100%;
+    height: 40px;
+    margin: 5px 0;
+    padding: 0 10px;
+
+    border: 0;
+    background-color: rgba(0,0,0,.05);
+}
+
+
+message[co-type="form"]{
+    width: 100%;
+    display: block;
+}
