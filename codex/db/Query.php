@@ -16,54 +16,48 @@ class Query{
 
     public function createCommand(){
         $lines = [];
+
         $lines[] = "SELECT $this->select";
         $lines[] = "FROM $this->from";
 
-        foreach( $this->data as $data ){
-            $type = $data['type'];
-            $query = $data['query'];
-
-            $lines[] = $this->createQuery( $type, $query );
-        }
-        return implode(' ', $lines);
-    }
-
-    public function createQuery( $type, $query ){
-        return "$type (" . $this->createSubQuery( $query ) . ")";
-    }
-
-    public function createSubQuery( $query ){
-        $glue = $query[0];
-        array_shift($query);
-
-        $lines = [];
-
-        foreach( $query as $params ){
-            if( count( $params ) == 1 ){
-                $firstKey = array_keys($params)[0];
-                $firstValue = $params[$firstKey];
-                $lines[] = "$firstKey = $firstValue";
-            } else if( count( $params ) == 3 ) {
-                $c = $params[1];
-                $v = $params[2];
-                $g = $params[0];
-
-                if( is_object( $v ) ){
-                    $className = get_class( $v );
-
-                    if( $className == 'codex\db\Query' ){
-                        $v = "(" . $v->createCommand() . ")";
-                    }
-                }
-
-
-
-                $lines[] = "$c $g $v";
+        foreach( $this->data as $col ){
+            $type = $col['type'];
+            $query = $col['query'];
+            if( isset( $query[0] ) && is_string( $query[0] ) ){
+                $glue = $query[0];
+                array_shift($query);
+                $lines[] = $type . " (" . $this->arrayToCommand( $glue, $query ) . ")";
+            } else {
+                echo 'chin'; die;
             }
         }
-        return implode(" $glue ", $lines);
+        return implode(" ", $lines);
     }
 
+    public function arrayToCommand( $glue, $query ){
+        $lines = [];
+        foreach( $query as $subQuery ){
+            if( count($subQuery) == 1 ){
+                $firstKey = array_keys($subQuery)[0];
+                $firstValue = $subQuery[$firstKey];
+                $lines[] = "$firstKey = $firstValue";
+            } else if( count($subQuery) == 3 && !is_array( $subQuery[1] ) ) {
+                $c = $subQuery[1];
+                $v = $subQuery[2];
+
+                if( is_object( $v ) && get_class( $v ) == 'codex\db\Query' ){
+                    $v = ' ( ' . $v->createCommand() . ' ) ';
+                }
+                $g = $subQuery[0];
+                $lines[] = "$c $g $v";
+            } else {
+                $g = $subQuery[0];
+                array_shift($subQuery);
+                $lines[] = ' ( ' . $this->arrayToCommand( $g, $subQuery ) . ' ) ';
+            }
+        }
+        return implode( " $glue ", $lines );
+    }
 
     public function select( $query ){
         $this->select = $query;

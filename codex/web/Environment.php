@@ -12,11 +12,11 @@ class Environment extends \codex\base\Model{
         if( is_dir( $this->path ) ){
 
             if( file_exists( $this->path . 'config' . DIRECTORY_SEPARATOR . 'config.php' ) ){
-                $this->config = include( $this->path . 'config' . DIRECTORY_SEPARATOR . 'config.php' );
+                $this->config = (object) include( $this->path . 'config' . DIRECTORY_SEPARATOR . 'config.php' );
             }
 
             if( file_exists( $this->path . 'config' . DIRECTORY_SEPARATOR . 'params.php' ) ){
-                $this->params = include( $this->path . 'config' . DIRECTORY_SEPARATOR . 'params.php' );
+                $this->params = (object) include( $this->path . 'config' . DIRECTORY_SEPARATOR . 'params.php' );
             }
         }
     }

@@ -25,6 +25,14 @@ class View extends \codex\base\Model{
         $viewFile = $baseView . $view . '.php';
         $layoutFile = $baseLayout . $layout . '.php';
 
+        if( $view == 'error' ){
+            print_r( $layoutFile );
+            print_r( $viewFile );
+            var_dump(\Codex::$app->controller); 
+            var_dump( $this->renderFile( $viewFile, $data ) );
+            die;
+        }
+
         return $this->renderFile( $layoutFile, [
             'view' => $this->renderFile( $viewFile, $data )
         ] );
@@ -54,13 +62,13 @@ class View extends \codex\base\Model{
         }
     }
 
-    public function registerJsFile( $file, $position ){
+    public function registerJsFile( $file, $position = self::POS_FOOTER ){
         $this->appendToPosition(Html::script("", [
             'type' => 'text/javascript',
             'src' => $file
         ]), $position );
     }
-    public function registerCssFile( $file, $position ){
+    public function registerCssFile( $file, $position = self::POS_HEAD ){
         $this->appendToPosition( Html::link([
             'type' => 'text/css',
             'rel' => 'stylesheet',
@@ -68,13 +76,13 @@ class View extends \codex\base\Model{
         ]), $position );
     }
 
-    public function registerJs( $content, $position ){
+    public function registerJs( $content, $position = self::POS_FOOTER ){
         $this->appendToPosition( Html::script($content, [
             'type' => 'text/javascript'
         ]), $position );
     }
 
-    public function registerCss( $content, $position ){
+    public function registerCss( $content, $position = self::POS_HEAD ){
         $this->appendToPosition( Html::style($content, [
             'type' => 'text/css'
         ]), $position );
@@ -111,7 +119,8 @@ class View extends \codex\base\Model{
         }
 
         if( !is_dir( dirname($file) ) ){
-            print_r( "does not exist $file <br/>" );
+            var_dump( $file );
+            echo '<br/>';
             return \Codex::$app->controller->runError( "Page not found <small>(4000)</small>" );
         } else if( !file_exists( $file ) ){
             print_r( "does not exist2 $file <br/>" );

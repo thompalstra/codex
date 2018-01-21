@@ -32,6 +32,7 @@ class Controller extends \codex\base\Model{
         $controllerClassName = \Codex::$app->environment->name . DIRECTORY_SEPARATOR . 'controllers' . DIRECTORY_SEPARATOR . ucwords( \Codex::$app->web->defaultController ) . 'Controller';
         return new $controllerClassName([
             'id' => \Codex::$app->web->defaultController,
+            'path' => \Codex::$app->web->defaultAction,
             'viewPath' => \Codex::$app->web->defaultController,
             'name' => ucwords( \Codex::$app->web->defaultController ) . 'Controller',
             'namespace' => \Codex::$app->environment->name . DIRECTORY_SEPARATOR . 'controllers' . DIRECTORY_SEPARATOR,
@@ -53,14 +54,14 @@ class Controller extends \codex\base\Model{
 
         $viewPath = ( count($parts) > 0 ) ? implode("\\", $parts) . DIRECTORY_SEPARATOR : "";
         array_pop($parts);
-        $path = ( count($parts) > 0 ) ? implode("\\", $parts) . DIRECTORY_SEPARATOR : "";
+        $path = ( count($parts) > 0 ) ? implode("\\", $parts) . DIRECTORY_SEPARATOR : \Codex::$app->web->defaultController;
 
         $controllerName = ucwords( $controllerId ) . 'Controller';
         $controllerNamespace = \Codex::$app->environment->name . DIRECTORY_SEPARATOR . 'controllers' . DIRECTORY_SEPARATOR;
         $controllerClassName = $controllerNamespace . $path . $controllerName;
 
         if( !class_exists( $controllerClassName ) ){
-            $controllerClassName = $controllerNamespace . ucwords( \Codex::$app->web['defaultController'] ) . 'Controller';
+            $controllerClassName = $controllerNamespace . ucwords( \Codex::$app->web->defaultController ) . 'Controller';
         }
 
         return new $controllerClassName([

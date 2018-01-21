@@ -12,7 +12,7 @@ $this->registerAsset(\common\assets\CodexAsset::className());
         <?=$this->head()?>
     </head>
     <body>
-        <?=$this::renderFile( '/frontend/html/templates/nav-default' )?>
+        <?=$this::renderFile( '/backend/html/templates/nav-default' )?>
         <section>
             <?=$view?>
         </section>
