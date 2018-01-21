@@ -54,14 +54,15 @@ class Controller extends \codex\base\Model{
 
         $viewPath = ( count($parts) > 0 ) ? implode("\\", $parts) . DIRECTORY_SEPARATOR : "";
         array_pop($parts);
-        $path = ( count($parts) > 0 ) ? implode("\\", $parts) . DIRECTORY_SEPARATOR : \Codex::$app->web->defaultController;
+        $path = ( count($parts) > 0 ) ? implode("\\", $parts) . DIRECTORY_SEPARATOR : "";
 
         $controllerName = ucwords( $controllerId ) . 'Controller';
         $controllerNamespace = \Codex::$app->environment->name . DIRECTORY_SEPARATOR . 'controllers' . DIRECTORY_SEPARATOR;
         $controllerClassName = $controllerNamespace . $path . $controllerName;
 
         if( !class_exists( $controllerClassName ) ){
-            $controllerClassName = $controllerNamespace . ucwords( \Codex::$app->web->defaultController ) . 'Controller';
+            return self::getDefaultController();
+            // $controllerClassName = $controllerNamespace . ucwords( \Codex::$app->web->defaultController ) . 'Controller';
         }
 
         return new $controllerClassName([

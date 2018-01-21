@@ -25,14 +25,6 @@ class View extends \codex\base\Model{
         $viewFile = $baseView . $view . '.php';
         $layoutFile = $baseLayout . $layout . '.php';
 
-        if( $view == 'error' ){
-            print_r( $layoutFile );
-            print_r( $viewFile );
-            var_dump(\Codex::$app->controller); 
-            var_dump( $this->renderFile( $viewFile, $data ) );
-            die;
-        }
-
         return $this->renderFile( $layoutFile, [
             'view' => $this->renderFile( $viewFile, $data )
         ] );
