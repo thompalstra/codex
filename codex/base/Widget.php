@@ -9,7 +9,7 @@ class Widget{
         }
     }
 
-    public static function widget($a = null, $b = null, $c = null ){
+    public static function widget(){
         $c = get_called_class();
         $w = new $c();
 

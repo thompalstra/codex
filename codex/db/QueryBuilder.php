@@ -75,24 +75,28 @@ class QueryBuilder{
             if( is_array( $group ) && isset( $group[0] ) && is_string( $group[0] ) && in_array( strtoupper( $group[0] ), ['OR', 'WHERE', 'AND' ] ) ){
                 $lines[] = '(' . $this->createGroup( $group ) . ')';
             } else if( is_array( $group ) && count( $group ) == 3 ){
-                $g = $group[0];
-                $c = $group[1];
-                $v = $group[2];
+                $lines[] = $this->asMultiKey( $group );
 
-                $v = $this->sanitize( $v );
-
-                $lines[] = "$c $g $v";
             } else if( is_array( $group ) ) {
                 foreach( $group as $c => $v ){
-                    $v = $this->sanitize( $v );
-                    $lines[] = "$c = $v";
+                    $lines[] = $this->asKeyValue( $c, $this->sanitize( $v ) );
                 }
             } else {
-                $v = $this->sanitize( $group );
-                $lines[] = "$k = $v";
+                $lines[] = $this->asKeyValue( $k, $this->sanitize( $group ) );
             }
         }
         return implode(" $glue ", $lines);
+    }
+
+    public function asKeyValue( $k, $v ){
+        return "$k = $v";
+    }
+    public function asMultiKey( $group ){
+        $g = $group[0];
+        $c = $group[1];
+        $v = $group[2];
+        $v = $this->sanitize( $v );
+        return "$c $g $v";
     }
 
     public function sanitize( $value ){
