@@ -25,6 +25,10 @@ class Query extends \codex\db\QueryBuilder{
         return $this;
     }
     public function where( $query ){
+        if( isset( $query[0] ) && !is_string( $query[0] ) ){
+            array_unshift($query , 'AND');
+        }
+
         $this->data[] = [
             'type' => 'WHERE',
             'query' => $query
@@ -47,6 +51,32 @@ class Query extends \codex\db\QueryBuilder{
     }
 
     public function leftJoin(){
+        $args = func_get_args();
+
+        $lines = [];
+        $lines[] = "LEFT JOIN";
+
+
+        if( count( $args ) == 2 ){
+            $table = $args[0];
+            $on = $args[1];
+
+            if( is_array($table) ){
+                $firstKey = array_keys( $table )[0];
+                $firstValue = $table[$firstKey];
+
+                $lines[] = "$firstValue AS $firstKey";
+            }
+
+            if( is_string( $on ) ){
+                $lines[] = "ON $on";
+            }
+        }
+
+        $this->data[] = [
+            'type' => 'LEFT JOIN',
+            'query' => implode(' ', $lines)
+        ];
 
         return $this;
     }

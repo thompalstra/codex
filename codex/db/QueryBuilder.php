@@ -1,6 +1,49 @@
 <?php
 namespace codex\db;
 
+// $subQuery = new \codex\db\Query();
+// $subQuery->select('user.id')->from('user')
+// ->where([
+//     'and',
+//     ['LIKE', 'username', '%thom%']
+// ]);
+//
+// $query = User::find(); // or $query->select('user.*')->from('user')
+// $query->leftJoin([
+//     'uc' => 'user_account'
+// ], 'uc.user_id = user.id')
+// ->where([
+//     'or',
+//     [
+//         'and',
+//         ['user.id' => 1],
+//         ['=', 'is_deleted', 1]
+//     ],
+//     [
+//         'and',
+//         ['is_enabled' => 1],
+//         ['IN', 'user.id', $subQuery],
+//     ],
+//     [
+//         'and',
+//         ['LIKE', 'last_name', '%lstra%'],
+//     ]
+// ]);
+// $query->orWhere([
+//     'or',
+//     [
+//         'and',
+//         [
+//             'and',
+//             [
+//                 'is_enabled' => 1,
+//                 'is_deleted' => 0
+//             ],
+//             ['is_deleted' => 0]
+//         ]
+//     ],
+// ]);
+// var_dump( $query->createCommand() );
 
 class QueryBuilder{
     public function createCommand(){
@@ -18,6 +61,8 @@ class QueryBuilder{
         $lines = [];
         if( is_array( $query ) && isset( $query[0] ) && is_string( $query[0] ) && in_array( strtoupper( $query[0] ), ['OR', 'WHERE', 'AND' ] ) ){
             $lines[] = $type . ' (' . $this->createGroup( $query ) . ')';
+        } else {
+            $lines[] = $query;
         }
         return implode(' ', $lines);
     }
@@ -26,7 +71,7 @@ class QueryBuilder{
         $glue = $query[0];
         array_shift($query);
         $lines = [];
-        foreach( $query as $group ){
+        foreach( $query as $k => $group ){
             if( is_array( $group ) && isset( $group[0] ) && is_string( $group[0] ) && in_array( strtoupper( $group[0] ), ['OR', 'WHERE', 'AND' ] ) ){
                 $lines[] = '(' . $this->createGroup( $group ) . ')';
             } else if( is_array( $group ) && count( $group ) == 3 ){
@@ -37,11 +82,14 @@ class QueryBuilder{
                 $v = $this->sanitize( $v );
 
                 $lines[] = "$c $g $v";
-            } else {
+            } else if( is_array( $group ) ) {
                 foreach( $group as $c => $v ){
                     $v = $this->sanitize( $v );
                     $lines[] = "$c = $v";
                 }
+            } else {
+                $v = $this->sanitize( $group );
+                $lines[] = "$k = $v";
             }
         }
         return implode(" $glue ", $lines);
@@ -55,31 +103,4 @@ class QueryBuilder{
         }
         return $value;
     }
-
-
-
-    // public function arrayToCommand( $glue, $query ){
-    //     $lines = [];
-    //     foreach( $query as $subQuery ){
-    //         if( count($subQuery) == 1 ){
-    //             $firstKey = array_keys($subQuery)[0];
-    //             $firstValue = $subQuery[$firstKey];
-    //             $lines[] = "$firstKey = $firstValue";
-    //         } else if( count($subQuery) == 3 && !is_array( $subQuery[1] ) ) {
-    //             $c = $subQuery[1];
-    //             $v = $subQuery[2];
-    //
-    //             if( is_object( $v ) && get_class( $v ) == 'codex\db\Query' ){
-    //                 $v = ' ( ' . $v->createCommand() . ' ) ';
-    //             }
-    //             $g = $subQuery[0];
-    //             $lines[] = "$c $g $v";
-    //         } else {
-    //             $g = $subQuery[0];
-    //             array_shift($subQuery);
-    //             $lines[] = ' ( ' . $this->arrayToCommand( $g, $subQuery ) . ' ) ';
-    //         }
-    //     }
-    //     return implode( " $glue ", $lines );
-    // }
 }
