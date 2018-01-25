@@ -210,11 +210,16 @@ extend(Element, Document).with({
                 this.addEventListener( a, b, c );
             } else if( typeof b === 'string' && typeof c === 'function' ) {
                 this.addEventListener( eventType, function( event ){
-                    if( event.target.matches( b ) ){
-                        c.call( event.target, event );
-                    } else if( ( closest = event.target.closest( b ) ) ){
-                        c.call( closest, event );
+
+                    if( typeof event.target.matches === 'function' ){
+                        if( event.target.matches( b ) ){
+                            c.call( event.target, event );
+                        } else if( ( closest = event.target.closest( b ) ) ){
+                            c.call( closest, event );
+                        }
                     }
+
+
                 } );
             }
         }
@@ -250,7 +255,13 @@ extend(Element, Document).with({
         }
         xhr.onerror = error;
         xhr.send();
+    },
+    css: function( a ){
+        for(var i in a){
+            this.style[i] = a[i];
+        }
     }
+
 });
 
 

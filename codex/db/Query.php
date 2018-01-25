@@ -36,6 +36,10 @@ class Query extends \codex\db\QueryBuilder{
         return $this;
     }
     public function andWhere( $query ){
+        if( isset( $query[0] ) && !is_string( $query[0] ) ){
+            array_unshift($query , 'AND');
+        }
+
         $this->data[] = [
             'type' => 'AND',
             'query' => $query
@@ -43,6 +47,10 @@ class Query extends \codex\db\QueryBuilder{
         return $this;
     }
     public function orWhere( $query ){
+        if( isset( $query[0] ) && !is_string( $query[0] ) ){
+            array_unshift($query , 'AND');
+        }
+
         $this->data[] = [
             'type' => 'OR',
             'query' => $query

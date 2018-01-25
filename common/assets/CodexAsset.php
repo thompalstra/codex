@@ -8,7 +8,8 @@ class CodexAsset extends \codex\web\Asset{
     ];
     public $css = [
         '/web/style/codex.css',
-        '/web/style/common-style.css'
+        '/web/style/common-style.css',
+        '/web/assets/material-icons/material-icons.css',
     ];
 
     public function assets(){
