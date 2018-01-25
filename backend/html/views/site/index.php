@@ -4,7 +4,7 @@
 
     <ul class='shortcuts shortcuts-default'>
         <div class='wrapper'>
-        <a href="">
+        <a href="/tools/notepad">
             <li class='shortcut shortcut-default'>
                 <label icon='format_italic'>Notepad</label>
             </li>
@@ -12,8 +12,10 @@
         </div>
     </ul>
 
+    <div class='frames frames-default'></div>
+
     <ul class='taskbar taskbar-default bottom left right'>
-        <li class='item item-default'><label icon='home'></label>
+        <li class='item item-default'><label icon='home' style='padding: 0;'></label>
             <ul class='taskbar taskbar-default'>
                 <li class='item item-default'><label icon='more_horiz'>Programs</label>
                     <ul class='taskbar taskbar-default'>
@@ -24,36 +26,218 @@
                 </li>
             </ul>
         </li>
-        <li class='item item-default'>
-            <label>Notepad</label>
-        </li>
     </ul>
-
-    <div class='frames frames-default'>
-        <div class='frame frame-default' co-allow-resize="true" style='width:400px;height:250px'>
-            <div class='title-bar'>
-                <div class='title'>
-                    Notepad
-                </div>
-                <div class='bar-actions'>
-                    <button class='action' type='minimize' icon='keyboard_arrow_left'></button>
-                    <button class='action' type='toggle' icon='fullscreen'></button>
-                    <button class='action' type='dismiss' icon='close'></button>
-                </div>
-            </div>
-            <div class='content'>
-                hello
-            </div>
-        </div>
-    </div>
 
 </div>
 <script>
-    document.listen('click', '.dt', function( event ){
-        document.find().all('.dt .frames .frame[focused]').forEach( function(el){
-            el.attr('focused', null);
-        } )
-    });
+
+
+    window['Frame'] = Frame = function( frames ){
+        this.frames = frames;
+        this.element = document.createElement('div');
+        this.element.className = 'frame frame-default';
+    }
+    extend(Frame).with({
+        open: function( url ){
+            this.element.setAttribute('co-url', url );
+            var success = function( resp ){
+
+                this.element.find().all('script').forEach(function(script){
+                    var result = function( script ){
+                        return eval( script );
+                    }.call(this, script.innerHTML);
+                }.bind(this));
+
+                var minimize = this.element.find().one('.bar-actions .action[type="minimize"]');
+
+                if( minimize ){
+                    minimize.listen('click',function(e){
+                        this.minimize();
+                    }.bind(this));
+                }
+
+                var toggle = this.element.find().one('.bar-actions .action[type="toggle"]');
+
+                if( toggle ){
+                    toggle.listen('click',function(e){
+                        this.toggle();
+                    }.bind(this));
+                }
+
+                var dismiss = this.element.find().one('.bar-actions .action[type="dismiss"]');
+
+                if( dismiss ){
+                    dismiss.listen('click',function(e){
+                        this.dismiss();
+                    }.bind(this));
+                }
+            }.bind(this)
+            var error = function( err ){
+            }.bind(this)
+            this.element.load( url, success, error );
+        },
+        minimize: function(){
+            this.element.attr('minimized', '');
+        },
+        maximize: function(){
+            this.element.attr('maximized', '');
+        },
+        show: function(){
+            this.element.attr('minimized', null);
+        },
+        toggle: function(){
+            if( this.element.attr('maximized') == '' ){
+                this.element.attr('maximized', null);
+            } else {
+                this.element.attr('maximized', '');
+            }
+        },
+        dismiss: function(){
+            this.taskbarItem.remove();
+            this.remove();
+        },
+        remove: function(){
+            this.frames.collection.splice( this.frames.collection.indexOf(this) , 1);
+            this.element.remove();
+        },
+
+        focusin: function(){
+            console.log('focusin');
+            this.element.attr('focused', '');
+            this.taskbarItem.focusin();
+        },
+        focusout: function(){
+            console.log('focusout');
+            this.element.attr('focused', null);
+            this.taskbarItem.focusout();
+        }
+
+    })
+
+
+    window['Frames'] = Frames = function( element, desktop ){
+        this.element = element;
+        this.collection = [];
+        this.desktop = desktop;
+    }
+
+    extend(Frames).with({
+        add: function( frame ){
+            this.element.appendChild( frame.element );
+            this.collection.push( frame );
+            this.desktop.dispatch( new CustomEvent( 'addedFrame', {
+                cancelable: true,
+                bubbles: true
+            }) );
+        }
+    })
+
+    window['Taskbar'] = Taskbar = function( element, desktop ){
+        this.element = element;
+        this.collection = [];
+        this.desktop = desktop;
+    }
+
+    extend(Taskbar).with({
+        update: function(){
+            this.desktop.frames.collection.forEach(function(frame){
+                if( typeof frame.taskbarItem == 'undefined' ){
+                    var element = document.createElement('li');
+                    element.className = 'item item-default';
+                    element.innerHTML = "<label>test</label>";
+                    this.desktop.taskbar.add( new TaskbarItem( element, this, frame ) );
+                }
+            }.bind(this))
+        },
+        add: function( taskbarItem ){
+            this.element.appendChild( taskbarItem.element );
+            this.collection.push( taskbarItem );
+            this.desktop.frames.element.style['bottom'] = document.find().one('.taskbar').offsetHeight;
+        }
+    })
+
+    window['TaskbarItem'] = TaskbarItem = function( element, taskbar, frame ){
+        this.element = element;
+        this.taskbar = taskbar;
+        this.frame = frame;
+
+        this.element.listen('click', function( event ){
+            if( this.frame.element.attr('minimized') == '' ){
+                this.frame.show();
+                this.frame.focusin();
+            } else {
+                this.frame.minimize();
+                this.frame.focusout();
+            }
+        }.bind(this));
+
+        frame.taskbarItem = this;
+    }
+
+    extend(TaskbarItem).with({
+        remove: function(){
+            this.taskbar.collection.splice( this.taskbar.collection.indexOf(this) , 1);
+            this.element.remove();
+        },
+        focusin: function(){
+            this.element.attr('focused', '');
+        },
+        focusout: function(){
+            this.element.attr('focused', null);
+        }
+    })
+
+    window['Desktop'] = Desktop = function( querySelector ){
+        this.element = document.find().one( querySelector );
+        this.frames = new Frames( this.element.find().one('.frames'), this );
+        this.taskbar = new Taskbar( this.element.find().one('.taskbar'), this );
+
+        this.element.listen('click', '.shortcuts a', function(e,t){
+            event.preventDefault();
+            var frame = new Frame( this.frames );
+            frame.open( t.getAttribute('href') );
+            this.frames.add( frame );
+        }.bind(this));
+
+        this.listen('addedFrame', function( event ){
+            this.taskbar.update();
+        })
+        this.element.listen('click', function(e){
+            var closest = e.target.closest('.frame');
+            if( !e.target.matches('.taskbar .item') && !e.target.matches('.taskbar .item *') ){
+                this.frames.collection.forEach(function(frame){
+                    if( frame.element === closest ){
+                        frame.focusin();
+                    } else {
+                        frame.focusout();
+                    }
+                });
+            }
+
+        }.bind(this));
+    }
+
+    extend(Desktop).with({
+        dispatch: function( event ){
+            var eventType = 'on' + event.type.charAt(0).toUpperCase() + event.type.slice(1);
+            if( typeof this[eventType] == 'object' && this[eventType].length > 0 ){
+                for(var i=0;i<this[eventType].length;i++){
+                    var callable = this[eventType][i];
+                    callable.call(this, event);
+                }
+            }
+        },
+        listen: function( event, callable ){
+            var eventType = 'on' + event.charAt(0).toUpperCase() + event.slice(1);
+            if( this[eventType] != 'object' ){
+                this[eventType] = [];
+            }
+            this[eventType].push(callable);
+        }
+    })
+
+    var desktop = new Desktop( '.dt' );
+
     document.listen('click', '.dt .taskbar .item', function( event ){
         var ul = this.find().one('ul');
         if( ul ){
@@ -62,13 +246,28 @@
         event.stopPropagation();
         this.focus();
     });
-    document.listen('click', '.dt .frames .frame', function( event ){
-        document.find().all('.dt .frames .frame[focused]').forEach( function(el){
-            el.attr('focused', null);
-        } )
-        this.attr('focused', '');
-    });
-    document.listen('mousedown', '.dt .frames .frame .title-bar', function( event ){
+    // document.listen('click', '.dt .frames .frame', function( event ){
+    //     event.stopPropagation();
+    //     document.find().all('.dt .frames .frame[focused]').forEach( function(el){
+    //         el.attr('focused', null);
+    //     } );
+    //     this.attr('focused', '');
+    // });
+    document.listen('click', '.dt .frames .frame [class="action"]', function( event ){
+        var type = this.attr('type');
+        switch(type){
+            case 'toggle':
+
+            break;
+            case 'dismiss':
+
+            break;
+            case 'minimize':
+            break;
+        }
+    })
+    document.listen('mousedown', '.dt .frames .frame:not([maximized]) .title-bar', function( event ){
+        console.log('mousedown');
         var frame = this.closest('.frame');
         frame.attr('dragging', '');
 
@@ -92,22 +291,23 @@
                 'left': relX
             });
         }
-
-
     });
 </script>
 <style>
-
     .dt .frames{
-        position: fixed;
+        position: absolute;
         top: 0; left: 0; right: 0; bottom: 0;
     }
+
     .dt .frames .frame{
         position: absolute;
         max-width: 100%;
         max-height: 100%;
 
         min-height: 50px;
+        z-index: 500;
+
+        top: 0;
     }
 
     .dt .frames .content,
@@ -119,17 +319,43 @@
         resize: both;
         overflow: auto;
     }
+
+    .dt .frames .frame-default{
+        resize: both;
+        overflow: auto;
+        background-color: #ddd;
+
+        -webkit-box-shadow: 10px 10px 5px 0px rgba(0,0,0,0.1);
+        -moz-box-shadow: 10px 10px 5px 0px rgba(0,0,0,0.1);
+        box-shadow: 10px 10px 5px 0px rgba(0,0,0,0.1);
+    }
+
+    .dt .frames .frame[maximized]{
+        width: 100% !important;
+        height: 100% !important;
+        top: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        left: 0 !important;
+    }
+    .dt .frames .frame[minimized]{
+        visibility: hidden;
+        pointer-events: none;
+    }
+
+    .dt .frames .frame-default[dragging],
     .dt .frames .frame-default[focused]{
-        opacity: 1;
         -webkit-box-shadow: 10px 10px 5px 0px rgba(0,0,0,0.4);
         -moz-box-shadow: 10px 10px 5px 0px rgba(0,0,0,0.4);
         box-shadow: 10px 10px 5px 0px rgba(0,0,0,0.4);
+        z-index: 550;
     }
-    .dt .frames .frame-default[dragging]{
-        opacity: .8;
-        -webkit-box-shadow: 10px 10px 5px 0px rgba(0,0,0,0.75);
-        -moz-box-shadow: 10px 10px 5px 0px rgba(0,0,0,0.75);
-        box-shadow: 10px 10px 5px 0px rgba(0,0,0,0.75);
+
+    .dt .frames .frame .title-bar{
+        -webkit-user-select: none;  /* Chrome all / Safari all */
+        -moz-user-select: none;     /* Firefox all */
+        -ms-user-select: none;      /* IE 10+ */
+        user-select: none;          /* Likely future */
     }
 
     .dt .frames .frame-default .title-bar{
@@ -138,7 +364,6 @@
         display: inline-block;
     }
     .dt .frames .frame-default .content{
-        background-color: #ddd;
         display: inline-block;
         min-height: calc(100% - 50px );
     }
@@ -171,7 +396,6 @@
     }
 
     .dt{
-        display: table;
         height: 100%;
         width: 100%;
 
@@ -187,7 +411,8 @@
     .dt .taskbar{
         list-style: none;
         padding: 0; margin: 0;
-        display: table-row;
+        position: absolute;
+        z-index: 1000;
     }
     .dt .taskbar.taskbar-default{
         min-height: 50px;
@@ -206,8 +431,13 @@
         position: relative;
         white-space: nowrap;
     }
+    .dt .taskbar .item:hover,
+    .dt .taskbar .item[focused]{
+        background-color: rgba(255,255,255,.15);
+    }
     .dt .taskbar .item.item-default{
         min-height: 50px;
+        min-width: 50px;
         line-height: 50px;
 
         color: white;
@@ -220,20 +450,13 @@
         text-align: center;
     }
     .dt .taskbar .item.item-default label{
-        /* padding: 0 10px 0 0;*/
-        padding: 0 10px 0 0;
+        padding: 0 10px;
     }
     .dt .taskbar .item label[icon]{
-        padding: 0 10px 0 60px;
+        padding: 0 10px;
     }
 
     .dt .taskbar .item label[icon]:before{
-
-        position: absolute;
-        left: 0;
-        top: 0;
-        bottom: 0;
-
         width: 50px;
         height: 50px;
         line-height: 50px;
@@ -291,7 +514,6 @@
     .dt .shortcuts{
         list-style: none;
         padding: 0; margin: 0;
-        display: table-row;
         height: 100%;
     }
 
@@ -303,6 +525,8 @@
 
     .dt .shortcuts .wrapper{
         padding: 10px;
+        position: relative;
+        z-index: 500;
     }
 
     .dt .shortcuts a{

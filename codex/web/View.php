@@ -12,12 +12,20 @@ class View extends \codex\base\Model{
     const POS_HEAD = 'head';
     const POS_FOOTER = 'footer';
 
+    public function renderPartial( $view, $data ){
+
+        $baseDir = \Codex::$app->baseDir . DIRECTORY_SEPARATOR . \Codex::$app->environment->name;
+
+        $baseView = $baseDir . DIRECTORY_SEPARATOR . 'html' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . \Codex::$app->controller->viewPath . DIRECTORY_SEPARATOR;
+
+        $viewFile = $baseView . $view . '.php';
+
+        return $this->renderFile( $viewFile, $data );
+    }
 
     public function render( $view, $layout, $data ){
 
         $baseDir = \Codex::$app->baseDir . DIRECTORY_SEPARATOR . \Codex::$app->environment->name;
-
-
 
         $baseView = $baseDir . DIRECTORY_SEPARATOR . 'html' . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . \Codex::$app->controller->viewPath . DIRECTORY_SEPARATOR;
         $baseLayout = $baseDir . DIRECTORY_SEPARATOR . 'html' . DIRECTORY_SEPARATOR . 'layouts' . DIRECTORY_SEPARATOR;

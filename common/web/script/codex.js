@@ -213,9 +213,9 @@ extend(Element, Document).with({
 
                     if( typeof event.target.matches === 'function' ){
                         if( event.target.matches( b ) ){
-                            c.call( event.target, event );
+                            c.apply( event.target, [event, event.target] );
                         } else if( ( closest = event.target.closest( b ) ) ){
-                            c.call( closest, event );
+                            c.apply( closest, [event, closest] );
                         }
                     }
 

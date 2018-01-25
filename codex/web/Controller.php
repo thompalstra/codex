@@ -104,6 +104,10 @@ class Controller extends \codex\base\Model{
         $view = new View();
         return $view->render( $viewId, $this->layout, $data );
     }
+    public function renderPartial( $viewId, $data = [] ){
+        $view = new View();
+        return $view->renderPartial( $viewId, $data );
+    }
 }
 
 ?>
