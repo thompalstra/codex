@@ -1,6 +1,6 @@
 <div class='title-bar'>
     <div class='title'>
-        Notepad
+        Browse users
     </div>
     <div class='bar-actions'>
         <button class='action' type='minimize' icon='keyboard_arrow_left'></button>
@@ -13,18 +13,12 @@
         File
         <ul class='toolstrip'>
             <li class='item item-default' icon='create'>New</li>
-            <li class='item item-default' icon='insert_drive_file' dt-frame-open dt-frame-url="/tools/browser?table=notepad&model=\">Open</li>
+            <li class='item item-default' icon='insert_drive_file' dt-frame-open dt-frame-url="/users/browse">Open</li>
         </ul>
     </li>
 
 </ul>
 <div class='content'>
-    <form class='form'>
-        <input type="hidden" name="content"/>
-        <div name="fake-content" contenteditable="true">
-            hello
-        </div>
-    </form>
 </div>
 <script>
 </script>

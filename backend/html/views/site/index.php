@@ -1,14 +1,14 @@
-<i class="material-icons">format_italic</i>
-
-<div class='dt dt-default' style='background-image: url( http://www.wallpapereast.com/static/images/waterdrops-bright-hd-wallpaper-507074.jpg )'>
+<div class='dt dt-default' style='background-image: url( )'>
+    <!-- <div class='dt dt-default' style='background-image: url( http://www.wallpapereast.com/static/images/waterdrops-bright-hd-wallpaper-507074.jpg )'> -->
 
     <ul class='shortcuts shortcuts-default'>
         <div class='wrapper'>
-        <a href="/tools/notepad">
-            <li class='shortcut shortcut-default'>
+            <li class='shortcut shortcut-default' dt-frame-open dt-frame-url="/tools/notepad">
                 <label icon='format_italic'>Notepad</label>
             </li>
-        </a>
+            <li class='shortcut shortcut-default' dt-frame-open dt-frame-url="/users/view">
+                <label icon='format_italic'>Users</label>
+            </li>
         </div>
     </ul>
 
@@ -19,7 +19,7 @@
             <ul class='taskbar taskbar-default'>
                 <li class='item item-default'><label icon='more_horiz'>Programs</label>
                     <ul class='taskbar taskbar-default'>
-                        <li class='item item-default'>
+                        <li class='item item-default' dt-frame-open dt-frame-url="/tools/notepad">
                             <label icon='format_italic'>Notepad</label>
                         </li>
                     </ul>
@@ -36,6 +36,11 @@
         this.frames = frames;
         this.element = document.createElement('div');
         this.element.className = 'frame frame-default';
+
+        this.element.listen('contextmenu', '.title-bar', function( event ){
+            window.event.returnValue = false;
+            this.contextmenu( event );
+        }.bind(this));
     }
     extend(Frame).with({
         open: function( url ){
@@ -102,16 +107,27 @@
         },
 
         focusin: function(){
-            console.log('focusin');
             this.element.attr('focused', '');
             this.taskbarItem.focusin();
         },
         focusout: function(){
-            console.log('focusout');
             this.element.attr('focused', null);
             this.taskbarItem.focusout();
+        },
+        contextmenu: function( event ){
+            new ContextMenu( this, this.frames.desktop, {
+                buttons: [
+                    {
+                        action: 'focusin',
+                        text: 'Focus'
+                    },
+                    {
+                        action: 'dismiss',
+                        text: 'Close'
+                    }
+                ]
+            }).show(event);
         }
-
     })
 
 
@@ -170,6 +186,10 @@
                 this.frame.focusout();
             }
         }.bind(this));
+        this.element.listen('contextmenu', function( event ){
+            window.event.returnValue = false;
+            this.contextmenu( event );
+        }.bind(this));
 
         frame.taskbarItem = this;
     }
@@ -184,6 +204,23 @@
         },
         focusout: function(){
             this.element.attr('focused', null);
+        },
+        contextmenu: function( event ){
+            new ContextMenu( this, this.taskbar.desktop, {
+                buttons: [
+                    {
+                        action: 'focusin',
+                        text: 'Focus'
+                    },
+                    {
+                        action: 'dismiss',
+                        text: 'Close'
+                    }
+                ]
+            }).show(event);
+        },
+        dismiss: function(){
+            this.frame.dismiss();
         }
     })
 
@@ -192,10 +229,10 @@
         this.frames = new Frames( this.element.find().one('.frames'), this );
         this.taskbar = new Taskbar( this.element.find().one('.taskbar'), this );
 
-        this.element.listen('click', '.shortcuts a', function(e,t){
+        this.element.listen('click', '[dt-frame-open]', function(e,t){
             event.preventDefault();
             var frame = new Frame( this.frames );
-            frame.open( t.getAttribute('href') );
+            frame.open( t.getAttribute('dt-frame-url') );
             this.frames.add( frame );
         }.bind(this));
 
@@ -214,6 +251,17 @@
                 });
             }
 
+            if( this.contextMenu ){
+                this.contextMenu.element.remove();
+                this.contextMenu = null;
+            }
+            var closest = e.target.closest('.item[open]');
+
+            if( !closest ){
+                document.find().all('.dt .taskbar .item[open]').forEach(function(item){
+                    item.attr('open', null);
+                });
+            }
         }.bind(this));
     }
 
@@ -236,23 +284,134 @@
         }
     })
 
+    window['ContextMenu'] = ContextMenu = function( parent, desktop, params ){
+
+
+        this.element = document.createElement('ul');
+        this.element.className = 'contextmenu contextmenu-default';
+        this.desktop = desktop;
+        this.parent = parent;
+
+        if( params.hasOwnProperty('buttons') ){
+            params.buttons.forEach(function(btn){
+                var contextMenuItem = document.createElement('li');
+                contextMenuItem.className = 'item item-default';
+
+                contextMenuItem.attr('action', btn.action);
+                contextMenuItem.innerHTML = btn.text;
+
+                this.element.appendChild(contextMenuItem);
+            }.bind(this))
+
+                            console.log('dsa2');
+
+                            console.log(this);
+
+            this.desktop.element.appendChild( this.element );
+        console.log('dsa1.5');
+        }
+
+        console.log('dsa1');
+
+
+    }
+
+    extend(ContextMenu).with({
+        show: function( event ){
+            var x = event.pageX; // - this.taskbarItem.taskbar.desktop.element.offsetLeft;
+            var y = event.pageY; // - this.taskbarItem.taskbar.desktop.element.offsetTop;
+
+            var element = this.element;
+
+            var height = element.offsetHeight;
+            var width = element.offsetWidth;
+
+            if( this.desktop.contextMenu ){
+                this.desktop.contextMenu.element.remove();
+                this.desktop.contextMenu = null;
+            }
+
+            this.desktop.contextMenu = this;
+
+            this.element.listen('mouseleave', function(e){
+                if( this.desktop.contextMenu ){
+                    this.desktop.contextMenu.element.remove();
+                }
+            }.bind(this));
+
+
+
+            this.element.listen('click', 'li', function(e){
+                var parent = this.parent;
+                var action = e.target.attr('action');
+                if( typeof parent[action] == 'function' ){
+                    parent[action].call(parent, e);
+                }
+
+                // var desktop = this.taskbarItem.taskbar.desktop;
+                if( this.desktop.contextMenu ){
+                    this.desktop.contextMenu.element.remove();
+                }
+            }.bind(this))
+
+            var desktopEl = this.desktop.element;
+
+            var maxHeight = desktopEl.offsetHeight;
+            var maxWidth = desktopEl.offsetWidth;
+
+            var offsetX = x + width;
+            var offsetY = y + height;
+
+            if( offsetY > maxHeight ){
+                y = y - (height - 10);
+            } else {
+                y = y - 10;
+            }
+
+            if( offsetX > maxWidth ){
+                x = x - (width - 10);
+            } else {
+                x = x - 10;
+            }
+
+            this.element.css({
+                top: y,
+                left: x
+            });
+
+        },
+        hide: function(){
+            this.element.remove();
+        }
+    });
+
     var desktop = new Desktop( '.dt' );
+
+    document.listen('click', '.dt .toolstrip .item', function( event ){
+        var ul = this.find().one('ul');
+        if( ul ){
+            this.toggleAttr('open', '');
+        } else {
+            document.find().all('.dt .toolstrip .item[open]').forEach(function(item){
+                item.attr('open', null);
+            });
+        }
+        event.stopPropagation();
+        this.focus();
+    })
 
     document.listen('click', '.dt .taskbar .item', function( event ){
         var ul = this.find().one('ul');
         if( ul ){
             this.toggleAttr('open', '');
+        } else {
+            document.find().all('.dt .taskbar .item[open]').forEach(function(item){
+                item.attr('open', null);
+            });
         }
         event.stopPropagation();
         this.focus();
     });
-    // document.listen('click', '.dt .frames .frame', function( event ){
-    //     event.stopPropagation();
-    //     document.find().all('.dt .frames .frame[focused]').forEach( function(el){
-    //         el.attr('focused', null);
-    //     } );
-    //     this.attr('focused', '');
-    // });
     document.listen('click', '.dt .frames .frame [class="action"]', function( event ){
         var type = this.attr('type');
         switch(type){
@@ -362,10 +521,19 @@
         background-color: black;
         color: white;
         display: inline-block;
+        float: left;
     }
     .dt .frames .frame-default .content{
         display: inline-block;
-        min-height: calc(100% - 50px );
+
+    }
+
+    .dt .frames .frame-default .title-bar + .content{
+        height: calc( 100% - 50px );
+    }
+
+    .dt .frames .frame-default .title-bar + .toolstrip + .content{
+        height: calc( 100% - 75px );
     }
 
 
@@ -395,6 +563,47 @@
 
     }
 
+    .dt .toolstrip{
+        height: 25px;
+
+        list-style: none;
+        padding: 0;
+        margin: 0;
+
+        float: left;
+        width: 100%;
+        display: inline-block;
+        background-color: #333;
+        color: white;
+    }
+
+    .dt .toolstrip .item{
+        position: relative;
+        height: 25px;
+        line-height: 25px;
+        padding: 0 10px;
+
+        display: inline-block;
+    }
+
+    .dt .toolstrip .item .toolstrip{
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: auto;
+        height: auto;
+
+        visibility: hidden;
+        pointer-events: none;
+
+
+    }
+
+    .dt .toolstrip .item[open] .toolstrip{
+        visibility: visible;
+        pointer-events: all;
+    }
+
     .dt{
         height: 100%;
         width: 100%;
@@ -406,6 +615,19 @@
     }
     .dt.dt-default{
 
+    }
+
+    .dt .contextmenu{
+        position: absolute;
+        top: 0; left: 0;
+        background-color: #ddd;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        z-index: 1000;
+    }
+    .dt .contextmenu .item{
+        padding: 10px;
     }
 
     .dt .taskbar{
@@ -451,6 +673,11 @@
     }
     .dt .taskbar .item.item-default label{
         padding: 0 10px;
+        min-width: 50px;
+        display: inline-block;
+        float: left;
+        box-sizing: border-box;
+        text-align: center;
     }
     .dt .taskbar .item label[icon]{
         padding: 0 10px;
